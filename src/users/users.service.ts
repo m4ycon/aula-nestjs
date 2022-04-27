@@ -1,81 +1,55 @@
-import { Injectable } from '@nestjs/common';
+import { PrismaService } from './../prisma/prisma.service';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
-type User = {
-  id: number;
-  name: string;
-  email: string;
-  password: string;
-};
-
 @Injectable()
 export class UsersService {
-  users: User[];
-
-  constructor() {
-    this.users = [];
-  }
+  constructor(private prisma: PrismaService) {}
 
   create(createUserDto: CreateUserDto) {
-    const user: User = {
-      id: this.users.length + 1,
-      ...createUserDto,
-    };
-
-    this.users.push(user);
-
-    return user;
+    return this.prisma.user.create({
+      data: createUserDto,
+    });
   }
 
   findAll() {
-    return this.users;
+    return this.prisma.user.findMany();
   }
 
-  findOne(id: number) {
-    return this.users.find((user) => user.id === id);
-  }
+  async findOne(id: number) {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id,
+      },
+    });
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    const i = this.users.findIndex((user) => user.id === id);
-
-    const user = this.users[i];
-    const userUpdated = {
-      ...user,
-      ...updateUserDto,
-    };
-
-    this.users[i] = userUpdated;
+    if (!user) throw new NotFoundException('User not found');
 
     return user;
   }
 
-  remove(id: number) {
-    this.users = this.users.filter((user) => user.id !== id);
+  async update(id: number, updateUserDto: UpdateUserDto) {
+    // checa se o usuário existe
+    await this.findOne(id);
 
-    return id;
+    const userUpdated = await this.prisma.user.update({
+      where: {
+        id,
+      },
+      data: updateUserDto,
+    });
+
+    return userUpdated;
+  }
+
+  async remove(id: number) {
+    await this.findOne(id);
+
+    return this.prisma.user.delete({
+      where: {
+        id,
+      },
+    });
   }
 }
-
-// @Injectable()
-// export class UsersService {
-//   create(createUserDto: CreateUserDto) {
-//     return 'Create user';
-//   }
-
-//   findAll() {
-//     return 'Get all users';
-//   }
-
-//   findOne(id: number) {
-//     return 'Get one user';
-//   }
-
-//   update(id: number, updateUserDto: UpdateUserDto) {
-//     return 'Update user';
-//   }
-
-//   remove(id: number) {
-//     return 'Remove user';
-//   }
-// }
