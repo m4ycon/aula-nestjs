@@ -10,11 +10,22 @@ export class UsersService {
   create(createUserDto: CreateUserDto) {
     return this.prisma.user.create({
       data: createUserDto,
+      select: {
+        id: true,
+        email: true,
+        name: true,
+      },
     });
   }
 
   findAll() {
-    return this.prisma.user.findMany();
+    return this.prisma.user.findMany({
+      select: {
+        id: true,
+        email: true,
+        name: true,
+      },
+    });
   }
 
   async findOne(id: number) {
@@ -38,6 +49,11 @@ export class UsersService {
         id,
       },
       data: updateUserDto,
+      select: {
+        id: true,
+        email: true,
+        name: true,
+      },
     });
 
     return userUpdated;
