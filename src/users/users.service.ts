@@ -4,8 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { CreateUserDto, UpdateUserDto } from './dto';
 
 @Injectable()
 export class UsersService {
@@ -29,11 +28,11 @@ export class UsersService {
 
   findAll() {
     return this.prisma.user.findMany({
-      // select: {
-      //   id: true,
-      //   email: true,
-      //   name: true,
-      // },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+      },
     });
   }
 
