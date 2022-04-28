@@ -1,5 +1,9 @@
 import { PrismaService } from './../prisma/prisma.service';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
@@ -7,7 +11,12 @@ import { UpdateUserDto } from './dto/update-user.dto';
 export class UsersService {
   constructor(private prisma: PrismaService) {}
 
-  create(createUserDto: CreateUserDto) {
+  async create(createUserDto: CreateUserDto) {
+    const user = await this.prisma.user.findUnique({
+      where: { email: createUserDto.email },
+    });
+    if (user) throw new ForbiddenException('User already exists');
+
     return this.prisma.user.create({
       data: createUserDto,
       select: {
@@ -20,11 +29,11 @@ export class UsersService {
 
   findAll() {
     return this.prisma.user.findMany({
-      select: {
-        id: true,
-        email: true,
-        name: true,
-      },
+      // select: {
+      //   id: true,
+      //   email: true,
+      //   name: true,
+      // },
     });
   }
 
