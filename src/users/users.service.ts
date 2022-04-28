@@ -11,19 +11,25 @@ export class UsersService {
   constructor(private prisma: PrismaService) {}
 
   async create(createUserDto: CreateUserDto) {
-    const user = await this.prisma.user.findUnique({
+    const userExists = await this.prisma.user.findUnique({
       where: { email: createUserDto.email },
     });
-    if (user) throw new ForbiddenException('User already exists');
+    if (userExists) throw new ForbiddenException('User already exists');
 
-    return this.prisma.user.create({
-      data: createUserDto,
+    const user = await this.prisma.user.create({
+      data: {
+        ...createUserDto,
+        Profile: { create: {} },
+      },
       select: {
         id: true,
         email: true,
         name: true,
+        Profile: true,
       },
     });
+
+    return user;
   }
 
   findAll() {
@@ -32,6 +38,8 @@ export class UsersService {
         id: true,
         email: true,
         name: true,
+        Post: true,
+        Profile: true,
       },
     });
   }
@@ -40,6 +48,10 @@ export class UsersService {
     const user = await this.prisma.user.findUnique({
       where: {
         id,
+      },
+      include: {
+        Post: true,
+        Profile: true,
       },
     });
 
