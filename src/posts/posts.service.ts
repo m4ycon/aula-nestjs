@@ -13,6 +13,15 @@ export class PostsService {
   constructor(private prisma: PrismaService) {}
 
   async create(createPostDto: CreatePostDto) {
+    const categories = await this.prisma.category.findMany({
+      where: {
+        id: { in: createPostDto.categories },
+      },
+    });
+
+    if (categories.length !== createPostDto.categories?.length)
+      throw new BadRequestException('One or more categories do not exist');
+
     const post = await this.prisma.post
       .create({
         data: {
@@ -25,18 +34,25 @@ export class PostsService {
         },
         include: {
           categories: true,
-          author: true,
+          author: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
         },
       })
       .catch((e) => {
         if (e instanceof Prisma.PrismaClientValidationError) {
-          console.log(e.message);
           throw new BadRequestException();
         }
 
         if (e instanceof Prisma.PrismaClientKnownRequestError) {
           if (e.code === 'P2025')
             throw new NotFoundException('Category not found');
+          if (e.code === 'P2003')
+            throw new NotFoundException('Author not found');
         }
       });
 
@@ -45,20 +61,14 @@ export class PostsService {
 
   findAll() {
     return this.prisma.post.findMany({
-      include: {
-        categories: true,
-      },
+      include: { categories: true },
     });
   }
 
   findOne(id: number) {
     return this.prisma.post.findUnique({
-      where: {
-        id,
-      },
-      include: {
-        categories: true,
-      },
+      where: { id },
+      include: { categories: true },
     });
   }
 
@@ -70,17 +80,27 @@ export class PostsService {
     return `This action removes a #${id} post`;
   }
 
-  addCategory(id: number, categoryId: number) {
-    return this.prisma.post.update({
-      where: { id },
-      data: { categories: { connect: { id: categoryId } } },
-    });
+  async addCategory(id: number, categoryId: number) {
+    return this.prisma.post
+      .update({
+        where: { id },
+        data: { categories: { connect: { id: categoryId } } },
+        include: { categories: true },
+      })
+      .catch((e) => {
+        if (e instanceof Prisma.PrismaClientKnownRequestError) {
+          if (e.code === 'P2025')
+            throw new NotFoundException(`Category not found`);
+          if (e.code === 'P2016') throw new NotFoundException(`Post not found`);
+        }
+      });
   }
 
   removeCategory(id: number, categoryId: number) {
     return this.prisma.post.update({
       where: { id },
       data: { categories: { disconnect: { id: categoryId } } },
+      include: { categories: true },
     });
   }
 }
