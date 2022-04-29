@@ -59,8 +59,10 @@ export class PostsService {
     return post;
   }
 
-  findAll() {
+  findAll(page: number) {
     return this.prisma.post.findMany({
+      skip: (page - 1) * 5,
+      take: 5,
       include: { categories: true },
     });
   }

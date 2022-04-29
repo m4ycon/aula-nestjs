@@ -6,10 +6,12 @@ import {
   Patch,
   Param,
   Delete,
+  BadRequestException,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
+import { isInt, min } from 'class-validator';
 
 @Controller('posts')
 export class PostsController {
@@ -20,9 +22,12 @@ export class PostsController {
     return this.postsService.create(createPostDto);
   }
 
-  @Get()
-  findAll() {
-    return this.postsService.findAll();
+  @Get(':page')
+  findAll(@Param('page') page: string) {
+    if (!(isInt(+page) && min(+page, 1)))
+      throw new BadRequestException('Page must be a number greater than 0');
+
+    return this.postsService.findAll(+page);
   }
 
   @Get(':id')
