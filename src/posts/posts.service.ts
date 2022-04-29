@@ -17,7 +17,7 @@ export class PostsService {
       .create({
         data: {
           ...createPostDto,
-          categories: {
+          categories: createPostDto.categories && {
             connect: createPostDto.categories.map((category) => ({
               id: category,
             })),
@@ -44,11 +44,22 @@ export class PostsService {
   }
 
   findAll() {
-    return this.prisma.post.findMany();
+    return this.prisma.post.findMany({
+      include: {
+        categories: true,
+      },
+    });
   }
 
   findOne(id: number) {
-    return `This action returns a #${id} post`;
+    return this.prisma.post.findUnique({
+      where: {
+        id,
+      },
+      include: {
+        categories: true,
+      },
+    });
   }
 
   update(id: number, updatePostDto: UpdatePostDto) {
@@ -57,5 +68,19 @@ export class PostsService {
 
   remove(id: number) {
     return `This action removes a #${id} post`;
+  }
+
+  addCategory(id: number, categoryId: number) {
+    return this.prisma.post.update({
+      where: { id },
+      data: { categories: { connect: { id: categoryId } } },
+    });
+  }
+
+  removeCategory(id: number, categoryId: number) {
+    return this.prisma.post.update({
+      where: { id },
+      data: { categories: { disconnect: { id: categoryId } } },
+    });
   }
 }
