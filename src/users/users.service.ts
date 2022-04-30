@@ -6,6 +6,16 @@ import {
 } from '@nestjs/common';
 import { CreateUserDto, UpdateUserDto } from './dto';
 
+type userIdentifier =
+  | {
+      id: number;
+      email?: never;
+    }
+  | {
+      id?: never;
+      email: string;
+    };
+
 @Injectable()
 export class UsersService {
   constructor(private prisma: PrismaService) {}
@@ -34,20 +44,20 @@ export class UsersService {
 
   findAll() {
     return this.prisma.user.findMany({
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        Post: true,
-        Profile: true,
-      },
+      // select: {
+      //   id: true,
+      //   email: true,
+      //   name: true,
+      //   Post: true,
+      //   Profile: true,
+      // },
     });
   }
 
-  async findOne(id: number) {
+  async findOne({ id, email }: userIdentifier) {
     const user = await this.prisma.user.findUnique({
       where: {
-        id,
+        ...(id ? { id } : { email }),
       },
       include: {
         Post: true,
@@ -62,7 +72,7 @@ export class UsersService {
 
   async update(id: number, updateUserDto: UpdateUserDto) {
     // checa se o usuário existe
-    await this.findOne(id);
+    await this.findOne({ id });
 
     const userUpdated = await this.prisma.user.update({
       where: {
@@ -80,7 +90,7 @@ export class UsersService {
   }
 
   async remove(id: number) {
-    await this.findOne(id);
+    await this.findOne({ id });
 
     return this.prisma.user.delete({
       where: {
