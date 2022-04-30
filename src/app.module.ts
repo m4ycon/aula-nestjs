@@ -8,9 +8,18 @@ import { PostsModule } from './posts/posts.module';
 import { ProfilesModule } from './profiles/profiles.module';
 import { CategoriesModule } from './categories/categories.module';
 import { AuthModule } from './auth/auth.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  imports: [RollModule, UsersModule, PostsModule, ProfilesModule, CategoriesModule, AuthModule],
+  imports: [
+    RollModule,
+    UsersModule,
+    PostsModule,
+    ProfilesModule,
+    CategoriesModule,
+    AuthModule,
+    ConfigModule.forRoot({ isGlobal: true }),
+  ],
   controllers: [AppController],
   providers: [AppService, PrismaService],
 })
