@@ -83,7 +83,7 @@ export class PostsService {
   }
 
   async addCategory(id: number, categoryId: number) {
-    return this.prisma.post
+    const post = await this.prisma.post
       .update({
         where: { id },
         data: { categories: { connect: { id: categoryId } } },
@@ -96,6 +96,8 @@ export class PostsService {
           if (e.code === 'P2016') throw new NotFoundException(`Post not found`);
         }
       });
+
+    return post;
   }
 
   removeCategory(id: number, categoryId: number) {

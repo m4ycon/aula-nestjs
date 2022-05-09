@@ -23,7 +23,7 @@ export class AuthService {
   }
 
   async signin(signInDto: SignInDto) {
-    const user = await this.userService.findOne({ email: signInDto.email });
+    const user = await this.userService.findHashByEmail(signInDto.email);
 
     const passwordMatches = await bcrypt.compare(
       signInDto.password,

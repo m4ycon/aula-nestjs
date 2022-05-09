@@ -44,7 +44,7 @@ export class UsersController {
   findOne(@Param('id') id: string) {
     if (!isInt(+id)) throw new BadRequestException('Id must be an integer');
 
-    return this.usersService.findOne({ id: +id });
+    return this.usersService.findOne(+id);
   }
 
   // Update

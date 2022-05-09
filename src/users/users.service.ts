@@ -36,6 +36,7 @@ export class UsersService {
         email: true,
         name: true,
         Profile: true,
+        Post: true,
       },
     });
 
@@ -54,14 +55,17 @@ export class UsersService {
     });
   }
 
-  async findOne({ id, email }: userIdentifier) {
+  async findOne(id: number) {
     const user = await this.prisma.user.findUnique({
       where: {
-        ...(id ? { id } : { email }),
+        id,
       },
-      include: {
-        Post: true,
+      select: {
+        id: true,
+        email: true,
+        name: true,
         Profile: true,
+        Post: true,
       },
     });
 
@@ -70,9 +74,24 @@ export class UsersService {
     return user;
   }
 
+  async findHashByEmail(email: string) {
+    const hash = await this.prisma.user.findUnique({
+      where: { email },
+      select: {
+        id: true,
+        email: true,
+        password: true,
+      },
+    });
+
+    if (!hash) throw new NotFoundException('User not found');
+
+    return hash;
+  }
+
   async update(id: number, updateUserDto: UpdateUserDto) {
     // checa se o usuário existe
-    await this.findOne({ id });
+    await this.findOne(id);
 
     const userUpdated = await this.prisma.user.update({
       where: {
@@ -90,11 +109,15 @@ export class UsersService {
   }
 
   async remove(id: number) {
-    await this.findOne({ id });
+    await this.findOne(id);
 
     return this.prisma.user.delete({
       where: {
         id,
+      },
+      include: {
+        Profile: true,
+        Post: true,
       },
     });
   }
